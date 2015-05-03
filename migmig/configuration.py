@@ -10,10 +10,12 @@ import os
 
 program_name = "migmig"
 # config file short path (hard coded !)
-cfg_short_path = "~/." + program_name + ".cfg"
+cfg_short_path = "~/." + program_name + ".ini"
+server_address = "localhost"
+server_port = "50001"
 
 
-class Config():
+class Configuration():
 
 	def __init__(self, logger):
 		self.logger = logger
@@ -40,13 +42,39 @@ class Config():
 		self.parser.set("Setting", "number_of_tries", "3")
 		self.parser.set("Setting", "verbose_level", "1")
 
-		# write settings to cfg file
+		self.parser.set('Setting', 'server_address', server_address)
+		self.parser.set('Setting', 'server_port', server_port)
+
+		# write settings to ini file
 		with open(self.cfg_path, "wb") as tmp:
 				self.parser.write(tmp)
 
 
-	def insert_id(self):
-		pass
+
+	def get(self, value):
+		'''
+			This method only returns values from "Client" section.
+		'''
+		try:
+			return self.parser.get('Client', value)
+		except:
+			return None
+
+	def set(self, name, value):
+		'''
+			Like get method, this only works for "Client" section.
+		'''
+		try:
+			self.parser.set('Client', name, value)
+			return True
+		except:
+			# log !
+			return None
+
+	def get_server(self):
+		addr = self.parser.get('Setting','server_address')
+		port = self.parser.get('Setting','server_port')
+		return addr + ':' + port
 
 
 	def default_download_path(self, new_path):

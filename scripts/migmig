@@ -10,15 +10,19 @@
 #   runner -x8 -t10 -s5 http://example.com/file.zip
 #   runner status <hash string>
 #   runner merge ~/Downloads/dir1 ~/Downloads/dir2
+#
+# <Name> is a positional argument.
+# [Name] is an optional argument .
 
 
 """
 Usage:
   migmig (-h | --help)
   migmig --version
-  migmig get HASH [-v...] [-s NAME] [-d NAME] [-x NAME] [-t NAME] [(--http-user NAME --http-password NAME)]
-  migmig status HASH
-  migmig merge [main_dir] [to_merge_dir]
+  migmig get <identifier> [-v...] [-s NAME] [-d NAME] [-x NAME] [-t NAME] [(--http-user NAME --http-password NAME)]
+  migmig status <identifier>
+  migmig release <identifier>
+  migmig merge [<main_dir>] [<to_merge_dir>]
   migmig update
   
 
@@ -26,8 +30,8 @@ Options:
   -h --help                 Show this screen.
   --version                 Show version.
   -v --verbose              Show debugs.
-  -s, --chunk-size <var>    Minimum size of chunks. Not recommended to use this!
-  -d, --directory <var>     Destination directory to download the chunks into it. [default: ~/Downloads]
+  -s, --chunk-size <var>    Minimum size of chunks. Not recommended to use this option!
+  -d, --directory <var>     Destination directory to download the chunks into it. [default: ~/Downloads/migmig]
   -x, --max-conn <var>      Maximum number of connections per server. [default: 6]
   -t, --max-tries <var>     Maximum number of tries when download fails. [default: 3]
   --http-user <var>
@@ -37,7 +41,7 @@ Options:
 
 
 
-from migmig import core
+from migmig.core import Core
 from migmig import docopt
 
-core.start(docopt.docopt(__doc__, version='migmig 0.1'))
+Core(docopt.docopt(__doc__, version='migmig 0.1'))

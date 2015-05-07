@@ -18,6 +18,12 @@ server_port = "50001"
 class Configuration():
 
 	def __init__(self, logger):
+		# constant variables
+		self.OK = 99
+		self.BAD_URL = 98
+		self.BLAHBLAH = 97
+
+
 		self.logger = logger
 		self.parser = SafeConfigParser()
 		self.cfg_path = self.validate_path(cfg_short_path)
@@ -45,9 +51,12 @@ class Configuration():
 		self.parser.set('Setting', 'server_address', server_address)
 		self.parser.set('Setting', 'server_port', server_port)
 
+		self.parser.set('Client', 'identifier', 'None')
+		self.parser.set('Client', 'URL', 'None')
+		self.parser.set('Client', 'client_id', 'None')
+
 		# write settings to ini file
-		with open(self.cfg_path, "wb") as tmp:
-				self.parser.write(tmp)
+		self.write()
 
 
 
@@ -60,21 +69,33 @@ class Configuration():
 		except:
 			return None
 
-	def set(self, name, value):
+	def set(self, **kwargs):
 		'''
 			Like get method, this only works for "Client" section.
 		'''
 		try:
-			self.parser.set('Client', name, value)
+			for key, value in kwargs.items():
+				self.parser.set('Client', key, value)
+
+			self.write()
 			return True
 		except:
-			# log !
-			return None
+			# log the python error. how?
+			return False
+
+	def write(self):
+		'''
+			Write (synchronize) the parser object to .ini file !
+		'''
+		# TO-DO : ...
+		with open(self.cfg_path, "wb") as tmp:
+				self.parser.write(tmp)
 
 	def get_server(self):
 		addr = self.parser.get('Setting','server_address')
 		port = self.parser.get('Setting','server_port')
-		return addr + ':' + port
+		return "http://" + addr + ':' + port
+		
 
 
 	def default_download_path(self, new_path):

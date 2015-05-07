@@ -11,15 +11,16 @@
 #   runner status <hash string>
 #   runner merge ~/Downloads/dir1 ~/Downloads/dir2
 #
-# <Name> is a positional argument.
-# [Name] is an optional argument .
+# Note:
+#   <Name> is a positional argument.
+#   [Name] is an optional argument .
 
 
 """
 Usage:
   migmig (-h | --help)
   migmig --version
-  migmig get <identifier> [-v...] [-s NAME] [-d NAME] [-x NAME] [-t NAME] [(--http-user NAME --http-password NAME)]
+  migmig get <identifier> [-v...] [-s NAME] [-d NAME] [-D] [-x NAME] [-t NAME] [-n NAME] [(--http-user NAME --http-password NAME)]
   migmig status <identifier>
   migmig release <identifier>
   migmig merge [<main_dir>] [<to_merge_dir>]
@@ -27,13 +28,15 @@ Usage:
   
 
 Options:
-  -h --help                 Show this screen.
-  --version                 Show version.
-  -v --verbose              Show debugs.
-  -s, --chunk-size <var>    Minimum size of chunks. Not recommended to use this option!
-  -d, --directory <var>     Destination directory to download the chunks into it. [default: ~/Downloads/migmig]
-  -x, --max-conn <var>      Maximum number of connections per server. [default: 6]
-  -t, --max-tries <var>     Maximum number of tries when download fails. [default: 3]
+  -h --help                       Show this screen.
+  --version                       Show version.
+  -v --verbose                    Show debugs.
+  -s, --chunk-size <var>          Minimum size of chunks. Not recommended to use this option!
+  -d, --directory <var>           Destination directory to download the chunks into it. [default: ~/Downloads/migmig]
+  -D, --daemon                    Start the program as daemon. dont show progress bar.
+  -x, --max-conn <var>            Maximum number of connections per server. [default: 6]
+  -t, --max-tries <var>           Maximum number of tries when download fails. [default: 3]
+  -n, --number-of-clients <var>   Specify how many clients are going to download a file. [default: 1]
   --http-user <var>
   --http-password <var>
 

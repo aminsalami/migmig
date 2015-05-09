@@ -35,6 +35,8 @@ class Configuration():
 
 		self.parser.read(self.cfg_path)
 
+		self.check_download_path()
+
 
 	def initate(self):
 		# Sections
@@ -42,7 +44,7 @@ class Configuration():
 		self.parser.add_section("Client")
 
 		# Options
-		self.parser.set("Setting", "default_download_path", os.path.expanduser("~/Downloads/" + program_name))
+		self.parser.set("Setting", "download_path", os.path.expanduser("~/Downloads/" + program_name))
 		self.parser.set("Setting", "default_merge_path", os.path.expanduser("~/Downloads/" + program_name + "/merged"))
 		self.parser.set("Setting", "max_connections", "6")
 		self.parser.set("Setting", "number_of_tries", "3")
@@ -60,14 +62,21 @@ class Configuration():
 
 
 
-	def get(self, value):
+	def get(self, name):
 		'''
-			This method only returns values from "Client" section.
+			This method looks for given name in all secion,
+			it returns the first value that is matched.
 		'''
-		try:
-			return self.parser.get('Client', value)
-		except:
-			return None
+		for section in self.parser.sections():
+			for item, val in self.parser.items(section):
+				if name == item:
+					return val
+		return None
+
+		# try:
+		# 	return self.parser.get('Client', value)
+		# except:
+		# 	return None
 
 	def set(self, **kwargs):
 		'''
@@ -98,10 +107,20 @@ class Configuration():
 		
 
 
-	def default_download_path(self, new_path):
-		new_path = self.validate_path(new_path)
-		if not new_path:
-			self.parser.set("Setting", "default_download_path", new_path)
+	def check_download_path(self):
+		'''
+			If download_path does not exist, create !
+		'''
+		d_path = self.parser.get('Setting', 'download_path')
+		if not os.path.exists(d_path):
+			try:
+				os.makedirs(d_path)
+			except:
+				# TO-D0: log
+				# maybe permission denied ?
+				print 'path cant be created !'
+				return False
+		return True
 
 	
 	def validate_path(self, path):

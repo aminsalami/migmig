@@ -17,14 +17,18 @@ server_port = "50001"
 
 class Configuration():
 
-	def __init__(self, logger):
+	def __init__(self, logger, user_options):
 		# constant variables
-		self.OK = 99
-		self.BAD_URL = 98
-		self.BLAHBLAH = 97
+		self.OK = '99'
+		self.DONE = '199'
+		self.BAD_URL = '98'
+		self.BLAHBLAH = '97'
+		self.RESUME_NOT_SUPPORTED = '198'
+		self.SOMETHING = '197'
 
 
 		self.logger = logger
+		self.user_options = user_options
 		self.parser = SafeConfigParser()
 		self.cfg_path = self.validate_path(cfg_short_path)
 
@@ -46,9 +50,9 @@ class Configuration():
 		# Options
 		self.parser.set("Setting", "download_path", os.path.expanduser("~/Downloads/" + program_name))
 		self.parser.set("Setting", "default_merge_path", os.path.expanduser("~/Downloads/" + program_name + "/merged"))
-		self.parser.set("Setting", "max_connections", "6")
-		self.parser.set("Setting", "number_of_tries", "3")
-		self.parser.set("Setting", "verbose_level", "1")
+		self.parser.set("Setting", "max-conn", "6")
+		self.parser.set("Setting", "retries", "3")
+		self.parser.set("Setting", "verbose", "1")
 
 		self.parser.set('Setting', 'server_address', server_address)
 		self.parser.set('Setting', 'server_port', server_port)
@@ -56,6 +60,7 @@ class Configuration():
 		self.parser.set('Client', 'identifier', 'None')
 		self.parser.set('Client', 'URL', 'None')
 		self.parser.set('Client', 'client_id', 'None')
+		self.parser.set('Client', 'latest_chunk', 'None')
 
 		# write settings to ini file
 		self.write()
@@ -64,23 +69,29 @@ class Configuration():
 
 	def get(self, name):
 		'''
-			This method looks for given name in all secion,
-			it returns the first value that is matched.
-		'''
-		for section in self.parser.sections():
-			for item, val in self.parser.items(section):
-				if name == item:
-					return val
-		return None
+			This method looks for given name in all sections,
+			returns the first value that is matched.
 
-		# try:
-		# 	return self.parser.get('Client', value)
-		# except:
-		# 	return None
+			User's options priority is higher, so if an option
+			is specified by user, that option returns.
+		'''
+		try:
+			if name in self.user_options:
+				return self.user_options[name]
+
+			for section in self.parser.sections():
+				for item, val in self.parser.items(section):
+					if name == item:
+						return val
+		except:
+			# TO-DO: Log, maybe this option doesn not exist at all!
+			print 'CANT GET ...'
+			return None
+
 
 	def set(self, **kwargs):
 		'''
-			Like get method, this only works for "Client" section.
+			This only works for "Client" section.
 		'''
 		try:
 			for key, value in kwargs.items():
@@ -90,7 +101,7 @@ class Configuration():
 			return True
 		except:
 			# log the python error. how?
-			return False
+			raise
 
 	def write(self):
 		'''

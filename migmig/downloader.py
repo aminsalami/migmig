@@ -41,10 +41,10 @@ class ManagedThreadPoolExecutor(futures.ThreadPoolExecutor):
         return l
 
 
+
 class Download():
 
     def __init__(self, config, logger, event, start_byte, chunk_size, file_name):
-        time.sleep(1)
 
         self.config = config
         self.logger = logger
@@ -109,7 +109,6 @@ class Download():
                 or finished successfully.
             '''
             # i think i should check the download status!
-
             # if download_status == True:
             self.merge_mini_chunks()
             for each_ex in self.pool.get_exceptions():

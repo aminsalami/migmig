@@ -3,19 +3,61 @@
 import logging
 import sys
 
-console = True
 class logger():
-	def __init__(self):
-		logging.basicConfig(level=logging.DEBUG, filename='test/mylog.txt', format='%(name)s \t%(message)s')
-		self.handlers = []
+	def __init__(self, verbose, console = None):
+		'''
+		Python doc :
+			https://docs.python.org/2/library/logging.html#logrecord-attributes
+
+			Levels:
+				0: NOTSET - 0
+				1: DEBUG - 10
+				2: INFO - 20
+				3: WARNING - 30
+				4: ERROR - 40
+				5: CRITICAL - 50
+		'''
+		levels = {
+					4: logging.DEBUG,
+					3: logging.INFO,
+					2: logging.WARNING,
+					1: logging.ERROR,
+					0: logging.WARNING
+				 }
+		if verbose in levels:
+			# Note: if user doesnt specify the verbose level, default will be zero (0:Warning)
+			level = levels[verbose]
+		else:
+			# log details is not important.
+			level = levels[1]
+
+		
+		FORMAT = '%(module)s(%(name)s)-%(asctime)s \t%(message)s'
+		LOG_PATH = 'test/migmig.log'
+
+		logging.basicConfig(level=level, filename=LOG_PATH, format=FORMAT)
+		self.root_logger = logging.getLogger()
+
 		if console:
-			self.handlers.append(logging.StreamHandler(sys.stdout))
+			'''
+				User wants logs on his console
+			'''
+			self.console_handler()
 
 
 
-	def get_logger(self, mod_name):
-		return logging.getLogger(mod_name)
 
-	def h(self):
-		self.root_logger.addHandler(self.handlers[0])
+	def get_logger(self, logger_name=None):
+		return logging.getLogger(logger_name)
+
+
+	def console_handler(self):
+		hdlr = logging.StreamHandler(sys.stdout)
+
+		# the logging format of console
+		FORMAT = '[%(module)s]:   %(message)s'
+
+		fo = logging.Formatter(FORMAT)
+		hdlr.setFormatter(fo)
+		self.root_logger.addHandler(hdlr)
 

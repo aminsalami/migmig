@@ -3,6 +3,7 @@
 from migmig import configuration
 from migmig import utils
 from migmig import downloader
+from migmig import log
 from socket import error as sockerr
 
 from threading import Event
@@ -17,8 +18,10 @@ class Core():
 		# arguments is a {dic} object of all options and commands from sys.argv
 		command, args, options = utils.parse_doc_arguments(arguments)
 
-		self.logger = None
-		self.config = configuration.Configuration(self.logger, options)
+		self.log_constructor = log.logger()
+		self.logger = self.log_constructor.get_logger(__name__)
+		self.logger.debug('initiate the core...')
+		self.config = configuration.Configuration(self.log_constructor, options)
 
 		self.event = Event()
 
@@ -159,7 +162,7 @@ class Core():
 				# distroy the object
 				# and try again (for new chunk)
 				download = downloader.Download( self.config,
-												self.logger,
+												self.log_constructor,
 												self.event,
 												fetch_restult['start_byte'],
 												fetch_restult['chunk_size'],

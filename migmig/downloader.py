@@ -6,6 +6,7 @@ from migmig import utils
 import urllib2
 import time
 import os
+from traceback import format_exc
 
 
 
@@ -47,7 +48,7 @@ class Download():
     def __init__(self, config, logger, event, start_byte, chunk_size, file_name):
 
         self.config = config
-        self.logger = logger
+        self.logger = logger.get_logger(__name__)
         self.event = event
         self.start_byte = start_byte
         self.chunk_size = chunk_size
@@ -68,8 +69,6 @@ class Download():
 
         self.bytes_range = utils.calc_bytes_range(int(self.chunk_size), int(self.threads_count))
 
-        self.run()
-
 
     def run(self):
         '''
@@ -78,7 +77,7 @@ class Download():
         for count, byte_range in enumerate(self.bytes_range):
             start_byte = byte_range[0]
             end_byte = byte_range[1]
-            # print count, byte_range
+            self.logger.debug('Is going to download bytes from %d to %d' % (start_byte, end_byte))
 
             future_obj = self.pool.submit(
                                 self.download,
@@ -112,7 +111,7 @@ class Download():
             # if download_status == True:
             self.merge_mini_chunks()
             for each_ex in self.pool.get_exceptions():
-                print each_ex
+                self.logger.error(each_ex)
 
             # download of this chunk finished, you can release the main thread
             self.event.set()
@@ -156,18 +155,19 @@ class Download():
                 will wait for the other threads to finish their connections and try again.
                 '''
                 if retries:
-                    print '[+] is retrying !'
-                    time.sleep(2)
+                    self.logger.warning(format_exc().split('\n')[-2])
+                    self.logger.info('Retrying the download.')
+                    time.sleep(1.5)
                     self.retries -= 1
                     # run again, check that there isnt a problem with this way!
                     # delete old files before trying ? (or just overwrite them)
                     return self.run()
             else:
-                # TO-DO: log the raise error
+                self.logger.error(format_exc().split('\n')[-2])
                 raise
 
         except urllib2.URLError:
-            print '[+] URL error'
+            self.logger.warning(format_exc().split('\n')[-2])
             raise
             
 
@@ -177,8 +177,8 @@ class Download():
                 try:
                     buff = urlObj.read(block)
                 except Exception, e:
-                    # TO-DO: log error ! (what erroe ?)
-                    print 'buffer error ! cant read block.'
+                    self.logger.error('Cannot read from URLobject.')
+                    self.logger.error(format_exc().split('\n')[-2])
                 if not buff:
                     break
 

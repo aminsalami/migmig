@@ -23,11 +23,11 @@ class Configuration():
 		self.DONE = '199'
 		self.BAD_URL = '98'
 		self.BLAHBLAH = '97'
-		self.RESUME_NOT_SUPPORTED = '198'
+		self.RANGE_NOT_SUPPORTED = '198'
 		self.SOMETHING = '197'
 
 
-		self.logger = logger
+		self.logger = logger.get_logger()
 		self.user_options = user_options
 		self.parser = SafeConfigParser()
 		self.cfg_path = self.validate_path(cfg_short_path)
@@ -35,8 +35,10 @@ class Configuration():
 		if not self.cfg_path:
 			# create config file and initate configurations
 			self.cfg_path = os.path.expanduser(cfg_short_path)
+			self.logger.info('Configuration path doesnt exist, creating new one in %s', self.cfg_path)
 			self.initate()
 
+		self.logger.info('Initating Safe Config Parser. ')
 		self.parser.read(self.cfg_path)
 
 		self.check_download_path()
@@ -52,7 +54,6 @@ class Configuration():
 		self.parser.set("Setting", "default_merge_path", os.path.expanduser("~/Downloads/" + program_name + "/merged"))
 		self.parser.set("Setting", "max-conn", "6")
 		self.parser.set("Setting", "retries", "3")
-		self.parser.set("Setting", "verbose", "1")
 
 		self.parser.set('Setting', 'server_address', server_address)
 		self.parser.set('Setting', 'server_port', server_port)
@@ -75,6 +76,7 @@ class Configuration():
 			User's options priority is higher, so if an option
 			is specified by user, that option returns.
 		'''
+		self.logger.debug('Getting %s from config parser.' % name)
 		try:
 			if name in self.user_options:
 				return self.user_options[name]
@@ -85,7 +87,7 @@ class Configuration():
 						return val
 		except:
 			# TO-DO: Log, maybe this option doesn not exist at all!
-			print 'CANT GET ...'
+			self.logger.warning('%s doesn\'t exist in config file.' % name)
 			return None
 
 
@@ -93,6 +95,7 @@ class Configuration():
 		'''
 			This only works for "Client" section.
 		'''
+		self.logger.debug('Writing new options to config file. options are: (%s)' % str(kwargs))
 		try:
 			for key, value in kwargs.items():
 				self.parser.set('Client', key, value)
@@ -107,7 +110,6 @@ class Configuration():
 		'''
 			Write (synchronize) the parser object to .ini file !
 		'''
-		# TO-DO : ...
 		with open(self.cfg_path, "wb") as tmp:
 				self.parser.write(tmp)
 
@@ -124,13 +126,13 @@ class Configuration():
 		'''
 		d_path = self.parser.get('Setting', 'download_path')
 		if not os.path.exists(d_path):
+			self.logger.info('download path (%s) doesnt exist, creating the path.' % d_path)
 			try:
 				os.makedirs(d_path)
 			except:
-				# TO-D0: log
 				# maybe permission denied ?
-				print 'path cant be created !'
-				return False
+				self.logger.critical('(%s) cannot be created.' % (d_path))
+				raise
 		return True
 
 	

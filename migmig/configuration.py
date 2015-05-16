@@ -3,6 +3,7 @@
 #
 ## tmp note: you should add logger module and modify this module
 #
+# tmp change
 
 from ConfigParser import SafeConfigParser
 import os

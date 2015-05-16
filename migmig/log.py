@@ -18,24 +18,23 @@ class logger():
 				5: CRITICAL - 50
 		'''
 		levels = {
-					4: logging.DEBUG,
-					3: logging.INFO,
-					2: logging.WARNING,
-					1: logging.ERROR,
-					0: logging.WARNING
+					0: logging.WARNING,
+					1: logging.INFO,
+					2: logging.DEBUG
 				 }
 		if verbose in levels:
 			# Note: if user doesnt specify the verbose level, default will be zero (0:Warning)
 			level = levels[verbose]
 		else:
-			# log details is not important.
-			level = levels[1]
+			# user wants the maximus log level
+			level = levels[2]
 
 		
-		FORMAT = '%(module)s(%(name)s)-%(asctime)s \t%(message)s'
+		FORMAT = '%(levelname).30s:%(name).30s %(asctime)s \t[%(message)s]'
+		DATEFORMAT = '%m/%d/%Y %I:%M %p'
 		LOG_PATH = 'test/migmig.log'
 
-		logging.basicConfig(level=level, filename=LOG_PATH, format=FORMAT)
+		logging.basicConfig(level=level, filename=LOG_PATH, format=FORMAT, datefmt = DATEFORMAT)
 		self.root_logger = logging.getLogger()
 
 		if console:
@@ -47,7 +46,7 @@ class logger():
 
 
 
-	def get_logger(self, logger_name=None):
+	def get_logger(self, logger_name = None):
 		return logging.getLogger(logger_name)
 
 
@@ -55,7 +54,7 @@ class logger():
 		hdlr = logging.StreamHandler(sys.stdout)
 
 		# the logging format of console
-		FORMAT = '[%(module)s]:   %(message)s'
+		FORMAT = '%(module)s:   [%(message)s]'
 
 		fo = logging.Formatter(FORMAT)
 		hdlr.setFormatter(fo)

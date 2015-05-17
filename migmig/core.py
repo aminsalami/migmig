@@ -93,6 +93,10 @@ class Core():
 			self.logger.error(format_exc().split('\n')[-2])
 			self.exit()
 
+		if self.config.get('identifier') == download_info['identifier']:
+			# if there is another console that is downloading the <identifier>, exit normally.
+			self.logger.info('Another migmig client with the same URI/HASH is running on this system.')
+			self.exit()
 
 		if download_info['status'] == self.config.RANGE_NOT_SUPPORTED:
 			# The given URL cant be spilited into chunks !
@@ -103,11 +107,6 @@ class Core():
 			self.logger.error('Server cannot handle the given URI.')
 			self.exit()
 
-
-		if self.config.get('identifier') == download_info['identifier']:
-			# if there is another console that is downloading the <identifier>, exit normally.
-			self.logger.info('Another migmig client with the same URI/HASH is running on this system.')
-			self.exit()
 
 		# if everything is fine, save the new info !
 		self.config.set(

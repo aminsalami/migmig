@@ -7,6 +7,7 @@
 
 from ConfigParser import SafeConfigParser
 import os
+from traceback import format_exc
 
 
 program_name = "migmig"
@@ -104,8 +105,9 @@ class Configuration():
 			self.write()
 			return True
 		except:
-			# log the python error. how?
-			raise
+			self.logger.error(format_exc().split('\n')[-2])
+			self.logger.error('Cannot set (or write) the key, value.')
+			return False
 
 	def write(self):
 		'''

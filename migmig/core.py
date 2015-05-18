@@ -85,8 +85,8 @@ class Core():
 			sys.exit(0)
 		except xmlrpclib.Fault as fault:
 			# TO-DO : log ProtocolErrors !
-			print fault
-			sys.exit(0)
+			self.logger.error(format_exc().split('\n')[-2])
+			self.exit()
 		except sockerr:
 			# print '[+] something is wrong with socket: %s' % self.config.get_server()
 			# self.logger.exception(sockerr)

@@ -80,36 +80,36 @@ class Core():
 
 		except xmlrpclib.ProtocolError as err:
 			# TO-DO : log ProtocolErrors !
-			print "Error code: %d" % err.errcode
-			print "URL: %s" % err.url
-			sys.exit(0)
+			self.logger.critical('PROTOCOL ERROR. error code: %s' % err.errcode)
+			self.logger.critical(format_exc().split('\n')[-2])
+			self.terminate()
 		except xmlrpclib.Fault as fault:
 			# TO-DO : log ProtocolErrors !
 			self.logger.error(format_exc().split('\n')[-2])
-			self.exit()
+			self.terminate()
 		except sockerr:
 			# print '[+] something is wrong with socket: %s' % self.config.get_server()
 			# self.logger.exception(sockerr)
 			self.logger.error(format_exc().split('\n')[-2])
-			self.exit()
+			self.terminate()
 
-		if self.config.get('identifier') == download_info['identifier']:
+		if download_info['identifier'] == self.config.get('identifier'):
 			# if there is another console that is downloading the <identifier>, exit normally.
 			self.logger.info('Another migmig client with the same URI/HASH is running on this system.')
-			self.exit()
+			self.terminate()
 
 		if download_info['status'] == self.config.RANGE_NOT_SUPPORTED:
 			# The given URL cant be spilited into chunks !
 			self.logger.error('RANGE NOT SUPPORTED. The given URI doesn\'t accept HTTP requests with range bytes.')
-			self.exit()
+			self.terminate()
 
 		if download_info['status'] == self.config.BAD_IDENTIFIER:
 			self.logger.error('You entered a bad hash string.')
-			self.exit()
+			self.terminate()
 
 		elif download_info['status'] != self.config.OK:
 			self.logger.error('Server cannot handle the given URI.')
-			self.exit()
+			self.terminate()
 
 
 		# if everything is fine, save the new info !
@@ -182,7 +182,7 @@ class Core():
 		# 6- do the termination stuff !
 		#	for example : delete all the clients stuff in .ini file.
 		# 
-		self.termination()
+		self.terminate()
 
 	
 
@@ -200,14 +200,13 @@ class Core():
 	def command_update(self, args, options):
 		pass
 
-	def exit(self, status = None):
-		# TO-DO: LOG
-		# TO-DO: exit status should be determind!
-		# if exit_status is normal:
-		self.logger.info('Exiting normally ...')
+
+	def terminate(self, terminate_status = None):
+		# delete client stuff from config file
+		
+		self.logger.debug('Resetting client settings.')
+		self.config.reset_client()
+		
+		self.logger.info('Terminating normally ...')
 		sys.exit(0)
 
-	def termination(self):
-		# delete client stuff from config file
-		# check the hash ?
-		self.exit()

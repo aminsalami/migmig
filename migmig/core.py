@@ -103,6 +103,10 @@ class Core():
 			self.logger.error('RANGE NOT SUPPORTED. The given URI doesn\'t accept HTTP requests with range bytes.')
 			self.exit()
 
+		if download_info['status'] == self.config.BAD_IDENTIFIER:
+			self.logger.error('You entered a bad hash string.')
+			self.exit()
+
 		elif download_info['status'] != self.config.OK:
 			self.logger.error('Server cannot handle the given URI.')
 			self.exit()
@@ -112,7 +116,7 @@ class Core():
 		self.config.set(
 			identifier = download_info['identifier'],
 			client_id=download_info['client_id'],
-			url = download_info['URL']
+			url = download_info['url']
 			)
 
 		if not self.config.get('daemon'):

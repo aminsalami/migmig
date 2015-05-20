@@ -53,21 +53,11 @@ class Configuration():
 		self.parser.add_section("Client")
 
 		# Options
-		self.parser.set("Setting", "download_path", os.path.expanduser("~/Downloads/" + program_name))
-		self.parser.set("Setting", "default_merge_path", os.path.expanduser("~/Downloads/" + program_name + "/merged"))
-		self.parser.set("Setting", "max-conn", "6")
-		self.parser.set("Setting", "retries", "3")
-
-		self.parser.set('Setting', 'server_address', server_address)
-		self.parser.set('Setting', 'server_port', server_port)
-
-		self.parser.set('Client', 'identifier', 'None')
-		self.parser.set('Client', 'URL', 'None')
-		self.parser.set('Client', 'client_id', 'None')
-		self.parser.set('Client', 'latest_chunk', 'None')
+		self.reset_setting()
+		self.reset_client()
 
 		# write settings to ini file
-		self.write()
+		# self.write()			# reset_*() will write to the files, no need for this line
 
 
 
@@ -148,3 +138,22 @@ class Configuration():
 		if os.path.exists(path):
 			return path
 		return None
+
+	def reset_client(self):
+		self.parser.set('Client', 'identifier', 'None')
+		self.parser.set('Client', 'url', 'None')
+		self.parser.set('Client', 'client_id', 'None')
+		self.parser.set('Client', 'latest_chunk', 'None')
+		# update the config file
+		self.write()
+
+	def reset_setting(self):
+		self.parser.set("Setting", "download_path", os.path.expanduser("~/Downloads/" + program_name))
+		self.parser.set("Setting", "default_merge_path", os.path.expanduser("~/Downloads/" + program_name + "/merged"))
+		self.parser.set("Setting", "max-conn", "6")
+		self.parser.set("Setting", "retries", "3")
+
+		self.parser.set('Setting', 'server_address', server_address)
+		self.parser.set('Setting', 'server_port', server_port)
+		# update the file 
+		self.write()

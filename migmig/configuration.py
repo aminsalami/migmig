@@ -21,10 +21,11 @@ class Configuration():
 
 	def __init__(self, logger, user_options):
 		# constant variables
-		self.OK = '99'
+		self.OK = '200'
 		self.DONE = '199'
 		self.BAD_URL = '98'
-		self.BLAHBLAH = '97'
+		self.BAD_IDENTIFIER = '97'
+		self.NOT_FOUND = '404'
 		self.RANGE_NOT_SUPPORTED = '198'
 		self.SOMETHING = '197'
 

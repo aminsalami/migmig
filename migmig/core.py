@@ -11,6 +11,7 @@ import sys
 import xmlrpclib
 from traceback import format_exc
 
+
 class Core():
 
 	def __init__(self, arguments):
@@ -53,8 +54,6 @@ class Core():
 		# do more stuff !
 		# 1 - check args validity (because docops cant do this ofcourse)
 		# 2 - log this command! with specific time and date
-
-
 		if command in self.commands.keys():		# no need to check, but anyway...
 			# run the command
 			self.commands[command](args, options)
@@ -93,6 +92,10 @@ class Core():
 			self.logger.error(format_exc().split('\n')[-2])
 			self.terminate()
 
+		if download_info['status'] == self.config.BAD_IDENTIFIER:
+			self.logger.error('You entered a bad hash string.')
+			self.terminate()
+
 		if download_info['identifier'] == self.config.get('identifier'):
 			# if there is another console that is downloading the <identifier>, exit normally.
 			self.logger.info('Another migmig client with the same URI/HASH is running on this system.')
@@ -101,10 +104,6 @@ class Core():
 		if download_info['status'] == self.config.RANGE_NOT_SUPPORTED:
 			# The given URL cant be spilited into chunks !
 			self.logger.error('RANGE NOT SUPPORTED. The given URI doesn\'t accept HTTP requests with range bytes.')
-			self.terminate()
-
-		if download_info['status'] == self.config.BAD_IDENTIFIER:
-			self.logger.error('You entered a bad hash string.')
 			self.terminate()
 
 		elif download_info['status'] != self.config.OK:
@@ -137,7 +136,6 @@ class Core():
 				chunk_num
 				file_name
 			'''
-
 			try:
 				self.logger.info('Fetching download informations from server.')
 				fetch_restult = self.proxy.fetch(
@@ -148,7 +146,7 @@ class Core():
 			except Exception:
 				self.logger.error('Can not fetch download informations.')
 				self.logger.error(format_exc().split('\n')[-2])
-				self.exit()
+				self.terminate()
 
 			if fetch_restult['status'] == self.config.DONE:
 				self.logger.info('All chunks have been downloaded successfully.')

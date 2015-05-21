@@ -1,4 +1,3 @@
-# First version of Migmi server 
 
 from twisted.internet import reactor, defer
 from twisted.web import xmlrpc, server
@@ -10,6 +9,7 @@ import chunky
 import urlparse, urllib
 import os, sys
 import hashlib
+
 
 
 class MigmigServer(xmlrpc.XMLRPC):
@@ -25,6 +25,9 @@ class MigmigServer(xmlrpc.XMLRPC):
 	def xmlrpc_new(self, identifier, client_id, options):
 		# check the identifier: if exist in server's pool, so extract the relavant object
 		# if doesnt exist, make a new object of chunky
+		if not client_id:
+			client_id = self.generate_hash(os.urandom(16))
+
 		if ('.' in identifier) or ('/' in identifier):
 			# Identifier's type is URL.
 			url = self.amend_url(identifier)
@@ -33,10 +36,9 @@ class MigmigServer(xmlrpc.XMLRPC):
 			if hash in self.hash_pool:
 				# It means the given URL is already exists in server
 				chunky_obj = self.hash_pool[hash]
+				# register the client_id
+				chunky_obj.register(client_id)
 			else:
-				# create new client_id
-				print 'old client_id: ', client_id
-				client_id = self.generate_hash(os.urandom(16))
 				# create new chunky object and initate it
 				chunky_obj = chunky.Chunky(hash, url, client_id, options)
 				self.hash_pool[hash] = chunky_obj
@@ -47,13 +49,13 @@ class MigmigServer(xmlrpc.XMLRPC):
 				# the given identifier neither is URL nor a correct HASH.
 				return {'status':setting.BAD_IDENTIFIER}
 			chunky_obj = self.hash_pool[hash]
+			chunky_obj.register(client_id)
 
 		# chunky_obj.
 		# 				1. fetch the url header (make sure to use the defer for non-blocking)
 		#				2. determine the status, file_name, content_len
 		#				3. send these informations to client ( NOTE: whoever creates a defer, he should fire it !)
 		return chunky_obj.new(client_id)
-
 			
 
 

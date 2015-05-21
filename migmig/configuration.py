@@ -1,9 +1,7 @@
 # Configuration module
-
 #
 ## tmp note: you should add logger module and modify this module
 #
-# tmp change
 
 from ConfigParser import SafeConfigParser
 import os
@@ -54,10 +52,9 @@ class Configuration():
 
 		# Options
 		self.reset_setting()
-		self.reset_client()
 
 		# write settings to ini file
-		# self.write()			# reset_*() will write to the files, no need for this line
+		# self.write()			# no need for this line
 
 
 
@@ -140,11 +137,9 @@ class Configuration():
 		return None
 
 	def reset_client(self):
-		self.parser.set('Client', 'identifier', 'None')
-		self.parser.set('Client', 'url', 'None')
-		self.parser.set('Client', 'client_id', 'None')
-		self.parser.set('Client', 'latest_chunk', 'None')
-		# update the config file
+		# removes all the options in "Client" section
+		self.parser.remove_section('Client')
+		self.parser.add_section('Client')
 		self.write()
 
 	def reset_setting(self):

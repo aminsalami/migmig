@@ -12,8 +12,7 @@ import xmlrpclib
 from traceback import format_exc
 
 
-class Core():
-
+class Core:
 	def __init__(self, arguments):
 
 		# arguments is a {dic} object of all options and commands from sys.argv
@@ -42,23 +41,20 @@ class Core():
 			# I have no idea what this update command supposed to be :D
 			'update': self.command_update
 		}
-		
+
 		# initiate xml proxy server. It doesnt raise exception if server is unavailavle !
 		self.logger.info('Making a XML-RPC server proxy (%s)' % self.config.get_server())
-		self.proxy = xmlrpclib.ServerProxy(self.config.get_server(), allow_none = True)
+		self.proxy = xmlrpclib.ServerProxy(self.config.get_server(), allow_none=True)
 
 		self.start(command, args, options)
 
-	
 	def start(self, command, args, options):
 		# do more stuff !
 		# 1 - check args validity (because docops cant do this ofcourse)
 		# 2 - log this command! with specific time and date
-		if command in self.commands.keys():		# no need to check, but anyway...
+		if command in self.commands.keys():  # no need to check, but anyway...
 			# run the command
 			self.commands[command](args, options)
-
-
 
 	def command_get(self, args, options):
 		#
@@ -67,14 +63,16 @@ class Core():
 		#	replace the old identifier by new identifier !
 		identifier = args['<identifier>']
 		client_id = self.config.get('client_id')
-		wanted_keys = ['chunk-size', 'number-of-clients']		# maybe later i'll add more options
-		relevant_options = dict([ (key, options[key]) for key in wanted_keys])
+		wanted_keys = ['chunk-size', 'number-of-clients']  # maybe later i'll add more options
+		relevant_options = dict([(key, options[key]) for key in wanted_keys])
 
 		try:
-			self.logger.info('First request. register this client on server by:\tidentifier: %s\tclient id:%s\toptions:%s' % (identifier, client_id, relevant_options))
+			self.logger.info(
+				'First request. register this client on server by:\tidentifier: %s\tclient id:%s\toptions:%s' % (
+					identifier, client_id, relevant_options))
 
 			download_info = self.proxy.new(identifier, client_id, relevant_options)
-			
+
 			self.logger.debug('Proxy answer to the register request:\n%s' % str(download_info))
 
 		except xmlrpclib.ProtocolError as err:
@@ -109,14 +107,12 @@ class Core():
 		elif download_info['status'] != self.config.OK:
 			self.logger.error('Server cannot handle the given URI.')
 			self.terminate()
-
-
 		# if everything is fine, save the new info !
 		self.config.set(
-			identifier = download_info['identifier'],
+			identifier=download_info['identifier'],
 			client_id=download_info['client_id'],
-			url = download_info['url']
-			)
+			url=download_info['url']
+		)
 
 		if not self.config.get('daemon'):
 			# Run a thread for prog_bar if its neccessary !
@@ -125,24 +121,22 @@ class Core():
 			# this feature is not gonna work in this version !!
 			pass
 
-
-
 		while True:
 			'''
-			fetch_restult:
-				status
-				start_byte
-				chunk_size
-				chunk_num
-				file_name
-			'''
+            fetch_restult:
+                status
+                start_byte
+                chunk_size
+                chunk_num
+                file_name
+            '''
 			try:
 				self.logger.info('Fetching download informations from server.')
 				fetch_restult = self.proxy.fetch(
 					self.config.get('identifier'),
 					self.config.get('client_id'),
 					self.config.get('latest_chunk')
-					)
+				)
 			except Exception:
 				self.logger.error('Can not fetch download informations.')
 				self.logger.error(format_exc().split('\n')[-2])
@@ -163,13 +157,13 @@ class Core():
 				# distroy the object
 				# and try again (for new chunk)
 				self.logger.info('Is going to download the chunk number "%d"' % int(fetch_restult['chunk_num']))
-				download = downloader.Download( self.config,
-												self.log_constructor,
-												self.event,
-												fetch_restult['start_byte'],
-												fetch_restult['chunk_size'],
-												fetch_restult['file_name']
-												)
+				download = downloader.Download(self.config,
+											   self.log_constructor,
+											   self.event,
+											   fetch_restult['start_byte'],
+											   fetch_restult['chunk_size'],
+											   fetch_restult['file_name']
+											   )
 				download.run()
 
 				# sleep
@@ -178,11 +172,9 @@ class Core():
 				self.event.clear()
 		#
 		# 6- do the termination stuff !
-		#	for example : delete all the clients stuff in .ini file.
-		# 
+		# for example : delete all the clients stuff in .ini file.
+		#
 		self.terminate()
-
-	
 
 	def command_status(self, args, options):
 		print args
@@ -198,13 +190,11 @@ class Core():
 	def command_update(self, args, options):
 		pass
 
-
-	def terminate(self, terminate_status = None):
+	def terminate(self, terminate_status=None):
 		# delete client stuff from config file
-		
+
 		self.logger.debug('Resetting client settings.')
 		self.config.reset_client()
-		
+
 		self.logger.info('Terminating normally ...')
 		sys.exit(0)
-

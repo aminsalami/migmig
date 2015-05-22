@@ -40,15 +40,16 @@ class ManagedThreadPoolExecutor(futures.ThreadPoolExecutor):
 
 
 class Download():
-    def __init__(self, config, logger, event, start_byte, chunk_size, file_name):
+    def __init__(self, config, logger, event, start_byte, end_byte, chunk_size, chunk_name):
 
         self.config = config
         self.logger = logger.get_logger(__name__)
         self.event = event
         self.start_byte = start_byte
+        self.end_byte = end_byte
         self.chunk_size = chunk_size
         self.timeout = 4
-        self.file_name = file_name
+        self.chunk_name = chunk_name
         self.mini_chunks = []
 
         self.retries = self.config.get('retries')
@@ -57,11 +58,11 @@ class Download():
 
         self.threads_count = self.config.get('max-conn')
         self.url = self.config.get('url')
-        self.file_path = self.config.get('download_path') + '/' + self.file_name
+        self.chunk_path = self.config.get('download_path') + '/' + self.chunk_name
 
         self.pool = ManagedThreadPoolExecutor(self.threads_count)
 
-        self.bytes_range = utils.calc_bytes_range(int(self.chunk_size), int(self.threads_count))
+        self.bytes_range = utils.calc_bytes_range(int(self.start_byte), int(self.end_byte), int(self.threads_count))
 
     def run(self):
         """
@@ -75,7 +76,7 @@ class Download():
             future_obj = self.pool.submit(
                 self.download,
                 self.url,
-                self.file_path + '.%.3d' % count,
+                self.chunk_path + '.%.3d' % count,
                 start_byte,
                 end_byte,
                 self.headers,
@@ -83,7 +84,7 @@ class Download():
                 self.retries
             )
             # add mini_chunk names to a list for later use
-            self.mini_chunks.append(str(self.file_path + '.%.3d' % count))
+            self.mini_chunks.append(str(self.chunk_path + '.%.3d' % count))
 
             '''
             From the python doc:
@@ -115,6 +116,7 @@ class Download():
             merge the list of mini_chunks -> [file.0001.000, file.0001.001, file.0001.002 ... ]
             to a single file -> "file.0001"
         """
+        self.logger.debug('Merging mini-chunks ...')
         path = self.mini_chunks[0][0:-4]
 
         with open(path, "wb") as f:

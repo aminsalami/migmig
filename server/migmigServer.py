@@ -55,6 +55,15 @@ class MigmigServer(xmlrpc.XMLRPC):
         # 3. send these information to client ( NOTE: whoever creates a defer, he should fire it !)
         return chunky_obj.new(client_id)
 
+    def xmlrpc_fetch(self, identifier, client_id, latest_chunk):
+        """
+        :return: dict
+        """
+        if identifier in self.hash_pool:  # this statement must be True all the times.
+            chunky_obj = self.hash_pool[identifier]
+            return chunky_obj.fetch(client_id, latest_chunk)
+        # else: return ERROR
+
     def amend_url(self, url, charset='utf-8'):
         """
         This method, changes the given url to a standard URL.

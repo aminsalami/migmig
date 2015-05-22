@@ -17,7 +17,7 @@ class Chunky:
 
                 2. each client has one Stack, but there is a main stack belongs to "chunky" class.
                     each client request for new chunk, the chunky "pop" a chunk from main stack and gives
-                    it to client. if client download the chunk successfully, the poped chunk goes to client stack.
+                    it to client. if client download the chunk successfully, the popped chunk goes to client stack.
                     this goes until main stack become empty.
 
                 3. the easiest way. There is only one Stack. for every request, chunky pop a chunk and gives it
@@ -79,16 +79,40 @@ class Chunky:
             'file_name': self._file_name,
             'content_len': self.content_len
         }
-        print '+', result
+
         return result
 
-    def fetch(self):
-        pass
+    def fetch(self, client_id, latest_downloaded_chunk):
+        """
+        Gets latest chunk which downloaded by client, and removes it from the current_download list.
+        Gives client a new chunk.
+        :return: dict
+        TO-DO: in new versions, you can save downloaded chunks into another stack.
+        """
+        self.__chunk_stack.remove_current(latest_downloaded_chunk)
+
+        if self.__chunk_stack.is_empty():
+            result = {'status': setting.DONE}
+        else:
+            # NOTE: if a chunk popped from stack, it automatically considers as a "current downloading chunk"
+            num, start, end = self.__chunk_stack.pop()
+            chunk_name = self._file_name + '.' + '%.4d' % num
+            result = {
+                'status': setting.OK,
+                'chunk_num': num,
+                'chunk_size': self.chunk_size,
+                'start_byte': start,
+                'end_byte': end,
+                'chunk_name': chunk_name
+            }
+        # print '[+] ' + str(result)
+
+        return result
 
     def get_headers(self):
         """
-            Apparantly twisted dont have any SIMPLE method equivalent to urlopen !
-            I wrote this method 'BLOCKING'. i shouldnt do this, but who cares ? :D
+            Apparently twisted don't have any SIMPLE method equivalent to urlopen !
+            I wrote this method 'BLOCKING'. i shouldn't do this, but who cares ? :D
         """
         try:
             url_obj = urllib2.urlopen(self._URL)
@@ -104,7 +128,7 @@ class Chunky:
 
         except urllib2.HTTPError, e:
             if e.code == 404:
-                # BAD URL, file not fount
+                # BAD URL, file not found
                 self.status = setting.NOT_FOUND
 
     def compute_chunk_size(self):
@@ -132,7 +156,7 @@ class Chunky:
 
         try:
             demanded_size = int(self.user_preferences.get('chunk-size'))
-            print 'demand: ', demanded_size, type(demanded_size)
+            # print 'demand: ', demanded_size, type(demanded_size)
             if demanded_size and demanded_size < self.content_len // 4:
                 size = demanded_size
         except:
@@ -150,7 +174,7 @@ class Chunky:
         while not flag:
             end = start + size - 1
 
-            if end > self.content_len:
+            if end >= self.content_len:
                 # make sure last chunk is correct
                 end = self.content_len
                 flag = True
@@ -183,16 +207,32 @@ class Stack:
     def __init__(self):
         # Last in First out
         self.__storage = []
+        self.__currents = []
 
     def pop(self):
         # pop the
-        return self.__storage.pop()
+        the_chunk = self.__storage.pop()
+        self.add_current(the_chunk)
+        return the_chunk
 
     def push(self, value):
         self.__storage.append(value)
 
     def get(self):
         return self.__storage[-1]
+
+    def add_current(self, ch):
+        self.__currents.append(ch)
+
+    def remove_current(self, chunk_num):
+        if chunk_num:
+            chunk_num = int(chunk_num)
+            for ch in self.__currents:
+                if chunk_num == ch[0]:
+                    self.__currents.remove(ch)
+                    return True
+        return False
+
 
     def is_empty(self):
         if not len(self.__storage):

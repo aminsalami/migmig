@@ -17,21 +17,21 @@ def parse_doc_arguments(arguments):
     return command, args, options
 
 
-def calc_bytes_range(chunk_size, threads_count):
+def calc_bytes_range(start, end, threads_count):
     """
         calculate "start byte" and "end byte" to give to each thread.
         return a list including tuples: (start, end)
     """
-    # 6291456
     bytes_range = []
+    chunk_size = end - start + 1
 
     mini_chunk = chunk_size // threads_count
-    pos = 0
+    pos = start
     for i in range(threads_count):
         start_byte = pos
         end_byte = start_byte + mini_chunk
-        if end_byte > chunk_size - 1:
-            end_byte = chunk_size
+        if end_byte > end - 1:
+            end_byte = end
 
         pos = end_byte + 1
         bytes_range.append((start_byte, end_byte))

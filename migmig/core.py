@@ -123,46 +123,47 @@ class Core:
 
         while True:
             '''
-            fetch_restult:
+            fetch_result:
                 status
                 start_byte
                 chunk_size
                 chunk_num
-                file_name
+                chunk_name
             '''
             try:
-                self.logger.info('Fetching download informations from server.')
-                fetch_restult = self.proxy.fetch(
+                self.logger.info('Fetching download information from server.')
+                fetch_result = self.proxy.fetch(
                     self.config.get('identifier'),
                     self.config.get('client_id'),
                     self.config.get('latest_chunk')
                 )
             except:
-                self.logger.error('Can not fetch download informations.')
+                self.logger.error('Can not fetch download information.')
                 self.logger.error(format_exc().split('\n')[-2])
                 self.terminate()
 
-            if fetch_restult['status'] == self.config.DONE:
+            if fetch_result['status'] == self.config.DONE:
                 self.logger.info('All chunks have been downloaded successfully.')
                 break
 
-            elif fetch_restult['status'] == self.config.SOMETHING:
+            elif fetch_result['status'] == self.config.SOMETHING:
                 break
 
-            elif fetch_restult['status'] == self.config.OK:
+            elif fetch_result['status'] == self.config.OK:
                 # create a new Download object
                 # download the given chunk
                 # save it on disk
                 # save the last_chunk in config
                 # distroy the object
                 # and try again (for new chunk)
-                self.logger.info('Is going to download the chunk number "%d"' % int(fetch_restult['chunk_num']))
+                self.logger.info('Is going to download the chunk number "%d"' % int(fetch_result['chunk_num']))
                 download = downloader.Download(self.config,
                                                self.log_constructor,
                                                self.event,
-                                               fetch_restult['start_byte'],
-                                               fetch_restult['chunk_size'],
-                                               fetch_restult['file_name']
+                                               fetch_result['start_byte'],
+                                               fetch_result['end_byte'],
+                                               fetch_result['chunk_size'],
+                                               fetch_result['chunk_name']
                                                )
                 download.run()
 

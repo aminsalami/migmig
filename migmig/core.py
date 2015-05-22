@@ -11,6 +11,7 @@ import sys
 import xmlrpclib
 from traceback import format_exc
 
+# TO-DO: add "ctrl+c" handler to handle the un normal exiting.
 
 class Core:
     def __init__(self, arguments):
@@ -171,6 +172,7 @@ class Core:
                 # wake on event
                 self.event.wait()
                 self.event.clear()
+                self.config.set(latest_chunk=fetch_result['chunk_num'])
         #
         # 6- do the termination stuff !
         # for example : delete all the clients stuff in .ini file.

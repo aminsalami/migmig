@@ -81,6 +81,7 @@ class Configuration:
         self.logger.debug('Writing new options to config file. options are: (%s)' % str(kwargs))
         try:
             for key, value in kwargs.items():
+                value = str(value)
                 self.parser.set('Client', key, value)
 
             self.write()

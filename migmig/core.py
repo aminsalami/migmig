@@ -138,13 +138,20 @@ class Core:
                     self.config.get('client_id'),
                     self.config.get('latest_chunk')
                 )
+            except xmlrpclib.Fault, fault:
+                self.logger.error('XMLRpc Fault Error.')
             except:
                 self.logger.error('Can not fetch download information.')
                 self.logger.error(format_exc().split('\n')[-2])
                 self.terminate()
 
             if fetch_result['status'] == self.config.DONE:
-                self.logger.info('All chunks have been downloaded successfully.')
+                self.logger.info('Server:There is no new chunk to download (maybe all chunks have been downloaded.)')
+                # Tell server this client is going to be terminated.
+                try:
+                    self.proxy.terminating(self.config.get('identifier'), self.config.get('client_id'))
+                except:
+                    self.logger.error('Error in "proxy.terminating"')
                 break
 
             elif fetch_result['status'] == self.config.SOMETHING:

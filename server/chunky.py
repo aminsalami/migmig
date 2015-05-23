@@ -43,13 +43,12 @@ class Chunky:
         self.status = setting.UNKNOWN
 
         # BLOCKING
-        self.get_headers()
+        if self.get_headers():
         # BLOCKING
-        # if result of get_headers() is ready:
-        self.chunk_size = self.compute_chunk_size()
-
-        # If we have chunk_size:
-        self.build_stack()
+            # if result of get_headers() is ready:
+            self.chunk_size = self.compute_chunk_size()
+            # If we have chunk_size:
+            self.build_stack()
 
     def add_client(self, cl):
         self.__clients.append(cl)
@@ -130,6 +129,7 @@ class Chunky:
             if e.code == 404:
                 # BAD URL, file not found
                 self.status = setting.NOT_FOUND
+            return None
 
     def compute_chunk_size(self):
         # if len is 0, how i can compute chunk len ?

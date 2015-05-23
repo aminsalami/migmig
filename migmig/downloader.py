@@ -138,21 +138,22 @@ class Download():
             url_obj = urllib2.urlopen(req, timeout=timeout)
         except urllib2.HTTPError, e:
             if e.code == 416:
-                '''
+                """
                 HTTP 416 Error: Requested Range Not Satisfiable. Happens when we ask
                 for a range that is not available on the server. It will happen when
                 the server will try to send us a .html page that means something like
                 "you opened too many connections to our server". If this happens, we
                 will wait for the other threads to finish their connections and try again.
-                '''
+                """
                 if retries:
                     self.logger.warning(format_exc().split('\n')[-2])
-                    self.logger.info('Retrying the download.')
-                    time.sleep(1.5)
+                    self.logger.info('Retrying the download ...')
                     self.retries -= 1
-                    # run again, check that there isnt a problem with this way!
+                    time.sleep(1)
+                    # run again, check that there is not a problem with this way!
                     # delete old files before trying ? (or just overwrite them)
                     return self.run()
+
             else:
                 self.logger.error(format_exc().split('\n')[-2])
                 raise

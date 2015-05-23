@@ -108,6 +108,15 @@ class Chunky:
 
         return result
 
+    def is_cleaned(self):
+        """
+        Returns True if all chunks have been downloaded.
+        :return: boolean
+        """
+        if self.__chunk_stack.is_empty() and self.__chunk_stack.is_current_empty():
+            return True
+        return False
+
     def get_headers(self):
         """
             Apparently twisted don't have any SIMPLE method equivalent to urlopen !
@@ -236,6 +245,11 @@ class Stack:
 
     def is_empty(self):
         if not len(self.__storage):
+            return True
+        return False
+
+    def is_current_empty(self):
+        if not len(self.__currents):
             return True
         return False
 

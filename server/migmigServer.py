@@ -64,6 +64,19 @@ class MigmigServer(xmlrpc.XMLRPC):
             return chunky_obj.fetch(client_id, latest_chunk)
         # else: return ERROR
 
+    def xmlrpc_terminating(self, identifier, client_id):
+        """
+         A client is going to be terminated. if there is no chunk to be downloaded, the identifier and its
+         object should be cleaned.
+        :return: boolean
+        """
+        if identifier in self.hash_pool:
+            chunky_obj = self.hash_pool[identifier]
+            if chunky_obj.is_cleaned():
+                del self.hash_pool[identifier]
+            return True
+        return False
+
     def amend_url(self, url, charset='utf-8'):
         """
         This method, changes the given url to a standard URL.
@@ -73,6 +86,7 @@ class MigmigServer(xmlrpc.XMLRPC):
         Following the syntax specifications in RFC 1808, urlparse recognizes
         a netloc only if it is properly introduced by "//". Otherwise the input
         is presumed to be a relative URL and thus to start with a path component.
+        :return: str
         """
 
         '''

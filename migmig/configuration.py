@@ -74,15 +74,18 @@ class Configuration:
             self.logger.warning('%s doesn\'t exist in config file.' % name)
             return None
 
-    def set(self, **kwargs):
+    def set(self, section=None, **kwargs):
         """
-            This only works for "Client" section.
+        Default section to write in is "client".
+        :return: boolean
         """
-        self.logger.debug('Writing new options to config file. options are: (%s)' % str(kwargs))
+        self.logger.debug('Writing options to config file. options are: (%s)' % str(kwargs))
+        if not section:
+            section = 'Client'
         try:
             for key, value in kwargs.items():
                 value = str(value)
-                self.parser.set('Client', key, value)
+                self.parser.set(section, key, value)
 
             self.write()
             return True
@@ -90,6 +93,7 @@ class Configuration:
             self.logger.error(format_exc().split('\n')[-2])
             self.logger.error('Cannot set (or write) the key, value.')
             return False
+
 
     def write(self):
         """

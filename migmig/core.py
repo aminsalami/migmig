@@ -4,7 +4,7 @@ from migmig import configuration
 from migmig import utils
 from migmig import downloader
 from migmig import log
-from socket import error as sockerr
+import socket
 
 from threading import Event
 import sys
@@ -72,24 +72,25 @@ class Core:
                 'First request. register this client on server by:\tidentifier: %s\tclient id:%s\toptions:%s' % (
                     identifier, client_id, relevant_options))
 
+            socket.setdefaulttimeout(4)
             download_info = self.proxy.new(identifier, client_id, relevant_options)
 
             self.logger.debug('Proxy answer to the register request:\n%s' % str(download_info))
 
         except xmlrpclib.ProtocolError as err:
-            # TO-DO : log ProtocolErrors !
             self.logger.critical('PROTOCOL ERROR. error code: %s' % err.errcode)
             self.logger.critical(format_exc().split('\n')[-2])
             self.terminate()
         except xmlrpclib.Fault as fault:
-            # TO-DO : log ProtocolErrors !
-            self.logger.error(format_exc().split('\n')[-2])
+            self.logger.error('XMLRPC proxy Error: %s' % format_exc().split('\n')[-2])
             self.terminate()
-        except sockerr:
-            # print '[+] something is wrong with socket: %s' % self.config.get_server()
-            # self.logger.exception(sockerr)
-            self.logger.error(format_exc().split('\n')[-2])
+        except socket.error:
+            # SOCKET Errors: timeout, connection refused ...
+            self.logger.error('Socket Error: %s' % format_exc().split('\n')[-2])
             self.terminate()
+        finally:
+            socket.setdefaulttimeout(None)
+
 
         if self.config.BAD_IDENTIFIER == download_info['status']:
             self.logger.error('You entered a bad hash string.')

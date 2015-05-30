@@ -33,11 +33,11 @@ Options:
   -v --verbose                    Show debugs.
   --console                       Show the logs in console. [default: 0]
   -s, --chunk-size <var>          Minimum size of chunks. Not recommended to use this option!
-  -d, --directory <var>           Destination directory to download the chunks into it. [default: ~/Downloads/migmig]
-  -D, --daemon                    Start the program as daemon. dont show progress bar.
-  -x, --max-conn <var>            Maximum number of connections per server. [default: 6]
-  -t, --retries <var>             Maximum number of tries when download fails. [default: 3]
-  -n, --number-of-clients <var>   Specify how many clients are going to download a file. [default: 1]
+  -d, --directory <var>           Destination directory to download the chunks into it.
+  -D, --daemon                    Start the program as daemon. do not show progress bar.
+  -x, --max-conn <var>            Maximum number of connections per server.
+  -t, --retries <var>             Maximum number of tries when download fails.
+  -n, --number-of-clients <var>   Specify how many clients are going to download a file.
   --http-user <var>
   --http-password <var>
 

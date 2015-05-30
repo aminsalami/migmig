@@ -63,7 +63,9 @@ class Configuration:
         self.logger.debug('Getting %s from config parser.' % name)
         try:
             if name in self.user_options:
-                return self.user_options[name]
+                val = self.user_options[name]
+                if not val:
+                    return val
 
             for section in self.parser.sections():
                 for item, val in self.parser.items(section):
@@ -111,8 +113,8 @@ class Configuration:
         """
             If download_path does not exist, create !
         """
-        d_path = self.parser.get('Setting', 'download_path')
-        if not os.path.exists(d_path):
+        d_path = self.get('download_path')
+        if not self.validate_path(d_path):
             self.logger.info('download path (%s) doesnt exist, creating the path.' % d_path)
             try:
                 os.makedirs(d_path)
@@ -138,12 +140,35 @@ class Configuration:
         self.write()
 
     def reset_setting(self):
-        self.parser.set("Setting", "download_path", os.path.expanduser("~/Downloads/" + program_name))
-        self.parser.set("Setting", "default_merge_path", os.path.expanduser("~/Downloads/" + program_name + "/merged"))
+        self.parser.set("Setting", "download_path", os.path.expanduser("~/Downloads/" + program_name + '/'))
+        self.parser.set("Setting", "merge_path", os.path.expanduser("~/Downloads/" + program_name + "/merged/"))
         self.parser.set("Setting", "max-conn", "6")
         self.parser.set("Setting", "retries", "3")
+        self.parser.set("Setting", "number-of-clients", '1')
 
         self.parser.set('Setting', 'server_address', server_address)
         self.parser.set('Setting', 'server_port', server_port)
         # update the file
         self.write()
+
+    def create_info(self):
+        """
+
+        :return:
+        """
+        download_path = self.validate_path(self.get('download_path'))
+        if download_path:
+            download_path = os.path.expanduser(download_path)
+            if download_path[-1] != '/':
+                download_path += '/'
+        else:
+            return None
+
+        tmp_parser = SafeConfigParser()
+        tmp_parser.add_section('info')
+        tmp_parser.set('info', 'content_len', self.get('content_len'))
+        tmp_parser.set('info', 'total_chunks', self.get('total_chunks'))
+        tmp_parser.set('info', 'file_name', self.get('file_name'))
+
+        with open(download_path + 'merge.info', 'wb') as f:
+            tmp_parser.write(f)

@@ -1,4 +1,3 @@
-from twisted.internet import defer
 import urllib2
 
 import constants as setting
@@ -37,6 +36,7 @@ class Chunky:
         self.user_preferences = user_preferences
 
         self.content_len = 0
+        self.total_chunks = 0
         self.content_type = None
         self.accept_ranges = None
 
@@ -44,11 +44,11 @@ class Chunky:
 
         # BLOCKING
         if self.get_headers():
-        # BLOCKING
             # if result of get_headers() is ready:
             self.chunk_size = self.compute_chunk_size()
             # If we have chunk_size:
             self.build_stack()
+            self.total_chunks = self.__chunk_stack.size()
 
     def add_client(self, cl):
         self.__clients.append(cl)
@@ -76,7 +76,8 @@ class Chunky:
             'url': self._URL,
             'client_id': client_id,
             'file_name': self._file_name,
-            'content_len': self.content_len
+            'content_len': self.content_len,
+            'total_chunks': self.total_chunks
         }
 
         return result

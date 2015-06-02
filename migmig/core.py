@@ -22,8 +22,8 @@ class Core:
         self.log_constructor = log.logger(options['verbose'], options['console'])
         self.logger = self.log_constructor.get_logger(__name__)
 
-        self.logger.info('Initate the core.')
-        self.logger.debug('Requsted command is: %s\tOptions are: %s\targuments are:%s' % (command, options, args))
+        self.logger.info('Initiate the core.')
+        self.logger.debug('Requested command is: %s\tOptions are: %s\targuments are:%s' % (command, options, args))
 
         try:
             self.config = configuration.Configuration(self.log_constructor, options)
@@ -43,21 +43,21 @@ class Core:
             'update': self.command_update
         }
 
-        # initiate xml proxy server. It doesnt raise exception if server is unavailavle !
-        self.logger.info('Making a XML-RPC server proxy (%s)' % self.config.get_server())
-        self.proxy = xmlrpclib.ServerProxy(self.config.get_server(), allow_none=True)
-
         self.start(command, args, options)
 
     def start(self, command, args, options):
         # do more stuff !
-        # 1 - check args validity (because docops cant do this ofcourse)
+        # 1 - check args validity (because docopt cant do this)
         # 2 - log this command! with specific time and date
         if command in self.commands.keys():  # no need to check, but anyway...
             # run the command
             self.commands[command](args, options)
 
     def command_get(self, args, options):
+        # initiate xml proxy server. It doesnt raise exception if server is unavailavle !
+        self.logger.info('Making a XML-RPC server proxy (%s)' % self.config.get_server())
+        self.proxy = xmlrpclib.ServerProxy(self.config.get_server(), allow_none=True)
+
         #
         # send identifier and options to server (RPC) (server would save client info)
         # and get {HASH} as new identifier and {client_id} from server (save them)
@@ -113,8 +113,13 @@ class Core:
         self.config.set(
             identifier=download_info['identifier'],
             client_id=download_info['client_id'],
-            url=download_info['url']
+            url=download_info['url'],
+            file_name=download_info['file_name'],
+            content_len=download_info['content_len'],
+            total_chunks=download_info['total_chunks'],
         )
+        # Create merge.info file
+        self.config.create_info()
 
         if not self.config.get('daemon'):
             # Run a thread for prog_bar if its neccessary !
@@ -163,7 +168,7 @@ class Core:
                 # download the given chunk
                 # save it on disk
                 # save the last_chunk in config
-                # distroy the object
+                # destroy the object
                 # and try again (for new chunk)
                 self.logger.info('Is going to download the chunk number "%d"' % int(fetch_result['chunk_num']))
                 download = downloader.Download(self.config,
@@ -193,7 +198,18 @@ class Core:
         print options
 
     def command_merge(self, args, options):
-        pass
+        """
+        Merge directory contents into default_path (~/Downloads/migmig/merged_filename
+        :return:
+        """
+        base_dir = args['<main_dir>']
+
+        second_dir = args['<to_merge_dir>']
+
+        from migmig.merger import Merger
+        merger = Merger(self.log_constructor, self.config, base_dir, second_dir)
+        merger.run()
+
 
     def command_release(self, args, options):
         pass

@@ -23,7 +23,7 @@ Usage:
   migmig get <identifier> [-v...] [-s NAME] [-d NAME] [-D] [-x NAME] [-t NAME] [-n NAME] [--console] [(--http-user NAME --http-password NAME)]
   migmig status <identifier>
   migmig release <identifier>
-  migmig merge [<main_dir>] [<to_merge_dir>]
+  migmig merge [-v...] [<main_dir>] [<to_merge_dir>]
   migmig update
   
 

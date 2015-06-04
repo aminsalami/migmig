@@ -1,6 +1,7 @@
 import os
 import glob
 import shutil
+from operator import itemgetter
 from ConfigParser import SafeConfigParser
 
 
@@ -37,6 +38,9 @@ class Merger:
             self.base_info.read(self.base_dir + '/' + 'merge.info')
             self.file_name = self.base_info.get('info', 'file_name')
             self.total_chunks = self.base_info.get('info', 'total_chunks')
+        else:
+            # TO-DO: log, there is no merge in this directory
+            print 'There is no "merge.info" in given directory'
 
         # Find merge.info for second directory
         if self.second_dir and os.path.exists(self.second_dir + '/' + 'merge.info'):
@@ -55,6 +59,11 @@ class Merger:
 
         # merge base directory with itself
         self.single_merge(self.base_dir)
+
+        if self.second_info:
+            self.single_merge(self.second_dir)
+            # now merge two directory together
+            self.single_merge(self.base_dir, self.second_dir)
 
     def chunk_list(self, directory):
         """
@@ -102,31 +111,63 @@ class Merger:
     def predecessor(self):
         pass
 
-    def single_merge(self, directory):
+    def sort(self, list, mode=1):
+        """
+        Sort the list by chunks number
+        :param list:
+        :return:
+        """
+        if mode == 1:
+            return sorted(list)
+        length = len(list)
+        unsorted = []
+
+        def get_number(index):
+            start_chunk = list[index].split('.')[-1]
+            start_chunk_num = start_chunk.split('-')[0]
+            return int(start_chunk_num)
+
+        for index in range(length):
+            num = get_number(index)
+            unsorted.append((num, list[index]))
+
+        s = sorted(unsorted, key=itemgetter(0))
+        result = []
+        for i in range(length):
+            result.append(s[i][1])
+        return result
+
+    def single_merge(self, directory, second_directory=None):
         """
 
         :param directory:
         :return:
         """
         ready = []
+        mode = 1
         chunk_list = self.chunk_list(directory)
-        chunk_list = sorted(chunk_list)
-        # print 'LEN:', len(chunk_list)
+
+        split_path = chunk_list[0].split('.')
+        file_path = ".".join(split_path[i] for i in range(len(split_path) - 1))
+
+        if second_directory:
+            second_chunk_list = self.chunk_list(second_directory)
+            chunk_list += second_chunk_list
+            mode = 2
+        chunk_list = self.sort(chunk_list, mode)
+        print 'Sorted chunk list:\n', chunk_list
 
         for index in range(len(chunk_list)):
             succ = self.successor(index, chunk_list)
             ready.append(chunk_list[index])
             if not succ:
-                self.chunk_merge(ready)
+                self.chunk_merge(ready, file_path)
                 ready = []
 
-    def chunk_merge(self, list):
+    def chunk_merge(self, list, file_path):
         if len(list) == 1:  # No merge is needed when there is only one chunk !
             print 'Len is 1, no merge'
             return
-
-        split_path = list[0].split('.')
-        file_path = ".".join(split_path[i] for i in range(len(split_path) - 1))
 
         start_chunk = list[0].split('.')[-1]
         start_chunk_number = start_chunk.split('-')[-1]
@@ -142,8 +183,6 @@ class Merger:
         print 'Destination:', destination
         with open(destination, 'wb') as f:
             for chunk in list:
-                shutil.copyfileobj(open(chunk, 'rb'), f, 200 * 1024)    # buffer size: 200KB, for faster copy
+                shutil.copyfileobj(open(chunk, 'rb'), f, 200 * 1024)  # buffer size: 200KB, for faster copy
                 os.remove(chunk)
         print '[+] Merge DONE !'
-
-

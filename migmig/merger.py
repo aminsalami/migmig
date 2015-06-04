@@ -2,7 +2,7 @@ import os
 import glob
 import shutil
 from operator import itemgetter
-from ConfigParser import SafeConfigParser
+from ConfigParser import RawConfigParser
 
 
 class Merger:
@@ -34,7 +34,7 @@ class Merger:
         # Find merge.info for base directory
         if os.path.exists(self.base_dir + '/' + 'merge.info'):
             print 'base info exist'
-            self.base_info = SafeConfigParser()
+            self.base_info = RawConfigParser()
             self.base_info.read(self.base_dir + '/' + 'merge.info')
             self.file_name = self.base_info.get('info', 'file_name')
             self.total_chunks = self.base_info.get('info', 'total_chunks')
@@ -44,7 +44,7 @@ class Merger:
 
         # Find merge.info for second directory
         if self.second_dir and os.path.exists(self.second_dir + '/' + 'merge.info'):
-            self.second_info = SafeConfigParser()
+            self.second_info = RawConfigParser()
             self.second_info.read(self.second_dir + '/' + 'merge.info')
 
     def run(self):
@@ -58,7 +58,9 @@ class Merger:
                 return
 
         # merge base directory with itself
-        self.single_merge(self.base_dir)
+        if not self.single_merge(self.base_dir):
+            # TO-DO: log, cannot merge, maybe there is no valid chunk
+            return
 
         if self.second_info:
             self.single_merge(self.second_dir)
@@ -146,6 +148,8 @@ class Merger:
         ready = []
         mode = 1
         chunk_list = self.chunk_list(directory)
+        if not chunk_list:
+            return
 
         split_path = chunk_list[0].split('.')
         file_path = ".".join(split_path[i] for i in range(len(split_path) - 1))

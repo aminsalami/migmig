@@ -3,7 +3,7 @@
 ## tmp note: you should add logger module and modify this module
 #
 
-from ConfigParser import SafeConfigParser
+from ConfigParser import RawConfigParser
 import os
 from traceback import format_exc
 
@@ -27,7 +27,7 @@ class Configuration:
 
         self.logger = logger.get_logger()
         self.user_options = user_options
-        self.parser = SafeConfigParser()
+        self.parser = RawConfigParser()
         self.cfg_path = self.validate_path(cfg_short_path)
 
         if not self.cfg_path:
@@ -162,7 +162,7 @@ class Configuration:
         if not download_path:
             return None
 
-        tmp_parser = SafeConfigParser()
+        tmp_parser = RawConfigParser()
         tmp_parser.add_section('info')
         tmp_parser.set('info', 'file_name', self.get('file_name'))
         tmp_parser.set('info', 'content_len', self.get('content_len'))

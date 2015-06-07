@@ -4,6 +4,7 @@ from concurrent import futures
 from migmig import utils
 
 import urllib2
+import socket
 import time
 import os
 from traceback import format_exc
@@ -31,6 +32,10 @@ class ManagedThreadPoolExecutor(futures.ThreadPoolExecutor):
         # all() returns true if all of the elemnts of itarable object is true.
         return all([x.done() for x in self._futures])
 
+    def cancel(self):
+        for future in self._futures:
+            future.cancel()
+
     def get_exceptions(self):
         l = []
         for x in self._futures:
@@ -51,6 +56,8 @@ class Download():
         self.timeout = 4
         self.chunk_name = chunk_name
         self.mini_chunks = []
+
+        self.quit = False
 
         self.retries = self.config.get('retries')
 
@@ -97,16 +104,23 @@ class Download():
     def check_done(self, arg):
         if self.pool.done():
             '''
-                pool.done() returns True, it means download cancelled 
+                if pool.done() returns True, it means download cancelled
                 or finished successfully.
             '''
             # i think i should check the download status!
             # if download_status == True:
-            self.merge_mini_chunks()
             for each_ex in self.pool.get_exceptions():
+                self.logger.debug('Printing Future exception: ')
                 self.logger.error(each_ex)
+            if not self.quit:
+                self.merge_mini_chunks()
+            else:
+                # Clean chunks from file system
+                for chunk in self.mini_chunks:
+                    if os.path.exists(chunk):
+                        os.remove(chunk)
 
-            # download of this chunk finished, you can release the main thread
+            # download finished, you can release the main thread
             self.event.set()
 
     def merge_mini_chunks(self):
@@ -123,7 +137,6 @@ class Download():
             for mini_chunk in self.mini_chunks:
                 with open(mini_chunk, "rb") as old:
                     f.write(old.read())
-
                 # remove the old mini_chunks
                 os.remove(mini_chunk)
 
@@ -149,8 +162,8 @@ class Download():
                     self.logger.warning(format_exc().split('\n')[-2])
                     self.logger.info('Retrying the download ...')
                     self.retries -= 1
-                    time.sleep(1)
-                    # run again, check that there is not a problem with this way!
+                    time.sleep(0.5)
+                    # run again, check that there is no problem with this way!
                     # delete old files before trying ? (or just overwrite them)
                     return self.run()
 
@@ -162,16 +175,43 @@ class Download():
             self.logger.warning(format_exc().split('\n')[-2])
             raise
 
-        block = 2048  # 2KB
+        block = 51200  # 50KB
         with open(dest_path, "wb") as f:
-            while True:
+            timeout_retrying = 2
+            while not self.quit:
                 try:
                     buff = url_obj.read(block)
-                except Exception, e:
-                    self.logger.error('Cannot read from URLobject.')
+                    if not buff:
+                        break
+                    f.write(buff)
+                except socket.timeout, e:
+                    self.logger.error('Cannot read from URL object (retrying ... )')
                     self.logger.error(format_exc().split('\n')[-2])
-                if not buff:
-                    break
+                    if timeout_retrying:
+                        timeout_retrying -= 1
+                        continue
+                    else:
+                        # Cancel download, url object can not be read.
+                        self.cancel()
+                except Exception:
+                    self.logger.error(format_exc().split('\n')[-2])
 
-                f.write(buff)
         url_obj.close()
+
+    def cancel(self):
+        """
+        Cancel downloading the chunk
+        :return:
+        """
+        self.quit = True
+        self.logger.info('Download has been cancelled.')
+        self.pool.cancel()
+
+    def status(self):
+        """
+        Returns boolean in this version.
+        :return: boolean
+        """
+        if self.quit:
+            return False
+        return True

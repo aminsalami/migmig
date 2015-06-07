@@ -64,7 +64,7 @@ class Configuration:
         try:
             if name in self.user_options:
                 val = self.user_options[name]
-                if not val:
+                if val:
                     return val
 
             for section in self.parser.sections():

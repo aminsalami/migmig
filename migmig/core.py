@@ -170,7 +170,7 @@ class Core:
                 # save the last_chunk in config
                 # destroy the object
                 # and try again (for new chunk)
-                self.logger.info('Is going to download the chunk number "%d"' % int(fetch_result['chunk_num']))
+                self.logger.info('downloading chunk number "%d"' % int(fetch_result['chunk_num']))
                 download = downloader.Download(self.config,
                                                self.log_constructor,
                                                self.event,
@@ -185,6 +185,15 @@ class Core:
                 # wake on event
                 self.event.wait()
                 self.event.clear()
+
+                """
+                core module can pull status of downloading chunks by calling download.status() method.
+                """
+                status = download.status()
+                if not status:
+                    self.logger.error('Download failed.')
+                    break
+
                 self.config.set(latest_chunk=fetch_result['chunk_num'])
         #
         # 6- do the termination stuff !
@@ -193,9 +202,7 @@ class Core:
         self.terminate()
 
     def command_status(self, args, options):
-        print args
-        print
-        print options
+        pass
 
     def command_merge(self, args, options):
         """

@@ -1,7 +1,7 @@
 # migmig logger module
 
 import logging
-import sys
+import sys, os
 
 
 class logger():
@@ -32,7 +32,7 @@ class logger():
 
         FORMAT = '%(levelname).30s:%(name).30s %(asctime)s \t[%(message)s]'
         DATEFORMAT = '%m/%d/%Y %I:%M %p'
-        LOG_PATH = 'test/migmig.log'
+        LOG_PATH = os.path.expanduser('~/.migmig.log')
 
         logging.basicConfig(level=level, filename=LOG_PATH, format=FORMAT, datefmt=DATEFORMAT)
         self.root_logger = logging.getLogger()

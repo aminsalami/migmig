@@ -12,7 +12,7 @@ class Chunky:
                     he will call build_stack() to build his new stack. the build_stack() method gives half of
                     chunks to second client. and if third client comes, he also will call build_stack().
                     If a client downloads all of his chunks in his stack, he calls build_stack to get new chunks.
-                    this procedure goes until build_stack() returns zero chunk meaning all chunks has been downloaded.
+                    this procedure goes until build_stack() returns zero chunk meaning all chunks have been downloaded.
 
                 2. each client has one Stack, but there is a main stack belongs to "chunky" class.
                     each client request for new chunk, the chunky "pop" a chunk from main stack and gives

@@ -110,8 +110,7 @@ class Download():
             # i think i should check the download status!
             # if download_status == True:
             for each_ex in self.pool.get_exceptions():
-                self.logger.debug('Printing Future exception: ')
-                self.logger.error(each_ex)
+                self.logger.error('Future object Exception: ' + str(each_ex))
             if not self.quit:
                 self.merge_mini_chunks()
             else:
@@ -162,18 +161,24 @@ class Download():
                     self.logger.warning(format_exc().split('\n')[-2])
                     self.logger.info('Retrying the download ...')
                     self.retries -= 1
-                    time.sleep(0.5)
-                    # run again, check that there is no problem with this way!
-                    # delete old files before trying ? (or just overwrite them)
-                    return self.run()
+                    # time.sleep(0.3)
+                    # return self.run()
+                    # TO_DO: NOT TESTED.
+                    return
 
             else:
-                self.logger.error(format_exc().split('\n')[-2])
-                raise
+                self.logger.error('Unknown HTTP Error: ' + format_exc().split('\n')[-2])
+                self.cancel()
+                return
 
         except urllib2.URLError:
-            self.logger.warning(format_exc().split('\n')[-2])
-            raise
+            self.logger.error(format_exc().split('\n')[-2])
+            self.cancel()
+            return
+        except:
+            self.logger.error('Unknown Error in opening URL.')
+            self.cancel()
+            return
 
         block = 51200  # 50KB
         with open(dest_path, "wb") as f:
@@ -194,6 +199,7 @@ class Download():
                         # Cancel download, url object can not be read.
                         self.cancel()
                 except Exception:
+                    self.logger.error('Unknown Exception.')
                     self.logger.error(format_exc().split('\n')[-2])
 
         url_obj.close()
@@ -201,7 +207,7 @@ class Download():
     def cancel(self):
         """
         Cancel downloading the chunk
-        :return:
+        :return: None
         """
         self.quit = True
         self.logger.info('Download has been cancelled.')

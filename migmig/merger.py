@@ -24,6 +24,7 @@ class Merger:
         self.base_info = None
         self.second_info = None
         self.file_name = ''
+        self.file_path = ''
         self.total_chunks = 0
 
         if not self.base_dir:
@@ -34,6 +35,7 @@ class Merger:
             self.base_info = RawConfigParser()
             self.base_info.read(self.base_dir + '/' + 'merge.info')
             self.file_name = self.base_info.get('info', 'file_name')
+            self.file_path = self.base_dir + '/' + self.file_name
             self.total_chunks = self.base_info.get('info', 'total_chunks')
         else:
             self.logger.error('There is no "merge.info" in [%s]'% self.base_dir )
@@ -48,16 +50,16 @@ class Merger:
     def run(self):
         # 1. merge each directory by itself
         if not self.base_info:
-            # TO-DO: LOG, there is no merge info in this directory
             return
         if self.second_info:
             if not self.check():
-                # TO-DO : log, can not merge
+                self.logger.warning('There is a problem with second directory.')
                 return
 
         # merge base directory with itself
         if not self.single_merge(self.base_dir):
             # TO-DO: log, cannot merge, maybe there is no valid chunk
+            self.logger.error('Cant merge main(given) directory.')
             return
 
         if self.second_info:
@@ -80,11 +82,11 @@ class Merger:
         Check if base directory and second directory representing same file.
         :return:
         """
-        base_file_name = self.base_info.items('info', 'file_name')
-        second_file_name = self.second_info.items('info', 'file_name')
+        base_file_name = self.base_info.get('info', 'file_name')
+        second_file_name = self.second_info.get('info', 'file_name')
 
-        base_content_len = self.base_info.items('info', 'content_len')
-        second_content_len = self.second_info.items('info', 'content_len')
+        base_content_len = self.base_info.get('info', 'content_len')
+        second_content_len = self.second_info.get('info', 'content_len')
 
         if (base_file_name == second_file_name) and (base_content_len == second_content_len):
             return True
@@ -157,6 +159,7 @@ class Merger:
             second_chunk_list = self.chunk_list(second_directory)
             chunk_list += second_chunk_list
             mode = 2
+            file_path = self.file_path
         chunk_list = self.sort(chunk_list, mode)
 
         for index in range(len(chunk_list)):
@@ -165,13 +168,14 @@ class Merger:
             if not succ:
                 self.chunk_merge(ready, file_path)
                 ready = []
+        return True
 
     def chunk_merge(self, list, file_path):
         if len(list) == 1:  # No merge is needed when there is only one chunk !
             return
 
         start_chunk = list[0].split('.')[-1]
-        start_chunk_number = start_chunk.split('-')[-1]
+        start_chunk_number = start_chunk.split('-')[0]
 
         end_chunk = list[-1].split('.')[-1]
         end_chunk_number = end_chunk.split('-')[-1]

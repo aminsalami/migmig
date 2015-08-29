@@ -185,7 +185,8 @@ class Download():
             timeout_retrying = 2
             while not self.quit:
                 try:
-                    buff = url_obj.read(block)
+                    # buff = url_obj.read(block)
+                    buff = url_obj.read()
                     if not buff:
                         break
                     f.write(buff)

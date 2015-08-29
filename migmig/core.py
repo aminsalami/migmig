@@ -6,6 +6,8 @@ from migmig import downloader
 from migmig import log
 import socket
 
+import signal
+
 from threading import Event
 import sys
 import xmlrpclib
@@ -21,6 +23,8 @@ class Core:
 
         self.log_constructor = log.logger(options['verbose'], options['console'])
         self.logger = self.log_constructor.get_logger(__name__)
+
+        self.download = None
 
         self.logger.info('Initiate the core.')
         self.logger.debug('Requested command is: %s\tOptions are: %s\targuments are:%s' % (command, options, args))
@@ -42,6 +46,8 @@ class Core:
             # I have no idea what this update command supposed to be :D
             'update': self.command_update
         }
+
+        signal.signal(signal.SIGINT, self.interrupt_handler)
 
         self.start(command, args, options)
 
@@ -171,7 +177,7 @@ class Core:
                 # destroy the object
                 # and try again (for new chunk)
                 self.logger.info('downloading chunk number "%d"' % int(fetch_result['chunk_num']))
-                download = downloader.Download(self.config,
+                self.download = downloader.Download(self.config,
                                                self.log_constructor,
                                                self.event,
                                                fetch_result['start_byte'],
@@ -179,17 +185,21 @@ class Core:
                                                fetch_result['chunk_size'],
                                                fetch_result['chunk_name']
                                                )
-                download.run()
+                self.download.run()
 
                 # sleep
                 # wake on event
-                self.event.wait()
-                self.event.clear()
+                while True:
+                    self.event.wait(1.5)
+                    if self.event.is_set():
+                        self.event.clear()
+                        break
+
 
                 """
                 core module can pull status of downloading chunks by calling download.status() method.
                 """
-                status = download.status()
+                status = self.download.status()
                 if not status:
                     self.logger.error('Download failed.')
                     break
@@ -226,9 +236,15 @@ class Core:
 
     def terminate(self, terminate_status=None):
         # delete client stuff from config file
-
         self.logger.debug('Resetting client settings.')
         self.config.reset_client()
 
         self.logger.info('Terminating normally ...')
         sys.exit(0)
+
+    def interrupt_handler(self, signal, frame):
+        print 'Ctrl + c pressed !'        # log to console
+        if self.download:
+            self.logger.info('Sending Cancel signal to downloader.')
+            self.download.cancel()
+        self.terminate()

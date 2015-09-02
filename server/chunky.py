@@ -92,20 +92,25 @@ class Chunky:
         self.__chunk_stack.remove_current(latest_downloaded_chunk)
 
         if self.__chunk_stack.is_empty():
-            result = {'status': setting.DONE}
-        else:
-            # NOTE: if a chunk popped from stack, it automatically considers as a "current downloading chunk"
-            num, start, end = self.__chunk_stack.pop()
-            chunk_name = self._file_name + '.' + '%.4d' % num
-            result = {
-                'status': setting.OK,
-                'chunk_num': num,
-                'chunk_size': self.chunk_size,
-                'start_byte': start,
-                'end_byte': end,
-                'chunk_name': chunk_name
-            }
-        # print '[+] ' + str(result)
+            ''' Temporarily: All chunks that remains in "__current" stack, will be considered as fail chunk!
+                so if there is no available chunk, server uses "__current" stack to pop the chunks.
+            '''
+            if self.__chunk_stack.is_current_empty():
+                return {'status': setting.DONE}
+            else:
+                self.__chunk_stack.extract_current()
+
+        # NOTE: if a chunk popped from stack, it automatically considers as a "current downloading chunk"
+        num, start, end = self.__chunk_stack.pop()
+        chunk_name = self._file_name + '.' + '%.4d' % num
+        result = {
+            'status': setting.OK,
+            'chunk_num': num,
+            'chunk_size': self.chunk_size,
+            'start_byte': start,
+            'end_byte': end,
+            'chunk_name': chunk_name
+        }
 
         return result
 
@@ -220,7 +225,7 @@ class Stack:
         self.__currents = []
 
     def pop(self):
-        # pop the
+        # pop the first chunk in storage
         the_chunk = self.__storage.pop()
         self.add_current(the_chunk)
         return the_chunk
@@ -243,6 +248,9 @@ class Stack:
                     return True
         return False
 
+    def extract_current(self):
+        poped = self.__currents.pop()
+        self.push(poped)
 
     def is_empty(self):
         if not len(self.__storage):
